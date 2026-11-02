@@ -1,0 +1,29 @@
+name: Build KIRA VST3 (Windows)
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -B build -S . -G "Visual Studio 17 2022" -A x64
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Package VST3
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Copy-Item -Recurse "build/KIRA_artefacts/Release/VST3/KIRA.vst3" "dist/KIRA.vst3"
+          Get-ChildItem -Recurse dist | Select-Object FullName
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: KIRA-VST3-Windows
+          path: dist/KIRA.vst3
